@@ -8,24 +8,33 @@ package body d_binari_1 is
       a.free := rang'Succ(a.free);
 
    end inserir;
-
+   
+   --Versio millorada, evitam visitar branques un cop ja hem trobat la suma.
+   --Evita l'error on podiem avaluar nodes amb un sol fill.
+   
    function preorder(a: in arbre; idx: in rang; suma: in  item; x:in item) return boolean
    is
-      ok1, ok2 : boolean;
+      ok : boolean := False;
       s : item;
    begin
-
-      if idx < a.free then
-
+   
+      if idx*2 >= a.free and (idx*2) +1 >= a.free then
+         s := suma + a.m(idx);
+         return s = x;
+      else   
          s := suma + a.m(idx);
          put_line(Image(s));
-         ok1:= preorder(a, idx*2, s, x);
-
-         ok2:= preorder(a, (idx*2)+1,  s, x);
-
-         return ok1 or ok2;
-      else
-         return suma = x;
+         
+         if idx*2 < a.free then    
+            ok := preorder(a, idx*2, s, x);
+            
+            if (idx*2) +1 < a.free and ok = False then
+               ok := preorder(a, (idx*2)+1,  s, x);
+            end if;
+         end if;
+         
+         return ok;
+ 
       end if;
 
    end preorder;
@@ -35,8 +44,6 @@ package body d_binari_1 is
    begin
       return preorder(a, rang'First, first_item, x);
    end is_path_sum;
-
-
 
 
 
