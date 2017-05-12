@@ -1,9 +1,7 @@
 
--- Implementació del package que defineix el tipus tparaula i les
+-- Implementacio del package que defineix el tipus tparaula i les
 -- operacions que es poden realitzar amb ell.
---
--- Es contempla l'ús d'un 'origen de paraules' per poder indicar el lloc
--- des d'on llegir les paraules (fitxer o teclat).
+
 package body pparaula is
 
    catala : constant array (1..12) of character := ('.',',',';',' ','[',']','!','?','-','(',')','&');
@@ -29,12 +27,14 @@ package body pparaula is
       end loop;
    end botar_blancs;
 
+
+
    -- Procediment per poder llegir del teclat
    procedure get(p : out tparaula; lletra : in out character; l, c: in out integer) is
       i : tllargaria := tllargaria'FIRST;
    begin
       while lletra = ' ' loop
-            -- Només s'ha de llegir si hi ha qualque cosa al fitxer
+            -- Nomes s'ha de llegir si hi ha qualque cosa
             if End_Of_File then
                lletra := '.';
 
@@ -42,9 +42,8 @@ package body pparaula is
                get(lletra);
                c := c + 1;
             end if;
-         end loop;
-
-         -- llegir les lletres de la paraula
+      end loop;
+        -- llegir les lletres de la paraula
          while (not Is_Special(lletra)) and i < tllargaria'LAST loop
             i := i+1;
             p.lletres(i) := lletra;
@@ -83,7 +82,7 @@ package body pparaula is
    end put;
 
    -- Procediment per escriure a un fitxer de text
-   procedure put(f : in out File_Type; p : in tparaula) is
+   procedure put(f : in out Ada.Text_IO.File_Type; p : in tparaula) is
       i : rang_lletres:= rang_lletres'FIRST;
    begin
       if not buida(p) then
@@ -95,7 +94,7 @@ package body pparaula is
       end if;
    end put;
 
-   -- Funció per comparar dues paraules i determinar si són iguals
+   -- Funcio per comparar dues paraules i determinar si són iguals
    function "=" (a, b : in tparaula) return boolean is
       resultat : boolean;
       i : rang_lletres;
@@ -111,22 +110,21 @@ package body pparaula is
       end if;
       return resultat;
    end "=";
-   -- Funció per saber la llargària d'una paraula. És a dir, el nombre
-   -- de lletres que formen la paraula en qüestió
+   -- Funcio per saber la llargaria d'una paraula.
    function llargaria(p : in tparaula) return tllargaria is
    begin
       return p.llargaria;
    end llargaria;
 
-   -- Funció que indica si la paraula està buida
+   -- Funcio que indica si la paraula està buida
    function buida(p : in tparaula) return boolean is
    begin
 
       return p.llargaria = tllargaria'FIRST;
    end buida;
 
-   -- Funció que torna la lletra que es troba a una posició determinada
-   -- d'una paraula. Si la posicio sol·licitada no és de la paraula es torna ' '
+   -- Funcio que torna la lletra que es troba a una posicio determinada
+   -- d'una paraula.
    function caracter(p : in tparaula; posicio : in rang_lletres) return character is
    begin
       if posicio <= p.llargaria then
@@ -136,8 +134,8 @@ package body pparaula is
       end if;
    end caracter;
 
-   -- Procediment que copia una paraula. És un procediment útil per
-   -- utilitzar aquest package PParaules i genèrics.
+   -- Procediment que copia una paraula. Es un procediment util per
+   -- utilitzar aquest package PParaules i genrrics.
    procedure copiar(desti : out tparaula; origen : in tparaula) is
    begin
       desti := origen;
@@ -155,13 +153,13 @@ package body pparaula is
    end toString;
 
    ----------------------------------------------------------------------
-   -- Implementació de les definicions relacionades amb OrigenParaules --
+   -- Implementacio de les definicions relacionades amb OrigenParaules --
    ----------------------------------------------------------------------
 
    -- Procediment per tractar amb les paraules llegides del teclat
    procedure open(origen : out OrigenParaules) is
    begin
-      origen.defitxer:= false;
+
       origen.lletra := ' ';
       origen.l := 0;
       origen.c := 0;
@@ -171,33 +169,38 @@ package body pparaula is
    -- Procediment per tractar amb les paraules llegides del fitxer nom
    procedure open(origen : out OrigenParaules; nom : in String) is
    begin
-      origen.defitxer := true;
-      open(origen.fitxer, In_File, nom);
+      if origen.to = f_seq then
+         open(origen.fitxer, In_File, nom);
+
+         -- botar_blancs 'ad hoc' pel cas de llegir de fitxer
+         origen.lletra := ' ';
+         while not End_Of_File(origen.fitxer) and origen.lletra = ' ' loop
+            get(origen.fitxer, origen.lletra);
+         end loop;
+
+         -- Si s'ha arribat a fi de fitxer i no s'ha llegit res interessant
+         -- s'ha acabat i es posa '.' a origen.lletra
+         if End_Of_File(origen.fitxer) and origen.lletra = ' ' then
+            origen.lletra := '.';
+         end if;
+      elsif origen.to = f_directe then
+         fitxer_paraules.Open(File => origen.fitxer_d, Mode => in_File, Name => nom);
+      end if;
       origen.l := 0;
       origen.c := 0;
-      -- botar_blancs 'ad hoc' pel cas de llegir de fitxer
-      origen.lletra := ' ';
-      while not End_Of_File(origen.fitxer) and origen.lletra = ' ' loop
-         get(origen.fitxer, origen.lletra);
-      end loop;
 
-      -- Si s'ha arribat a fi de fitxer i no s'ha llegit res interessant
-      -- s'ha acabat i es posa '.' a origen.lletra
-      if End_Of_File(origen.fitxer) and origen.lletra = ' ' then
-         origen.lletra := '.';
-      end if;
-   exception
-      when Name_Error => create(origen.fitxer, In_File, nom);
-
-
+--     exception
+--        when Name_Error => create(origen.fitxer, In_File, nom);
    end open;
 
    -- Procediment per tancar l'origen de les paraules
    procedure close(origen : in out OrigenParaules) is
    begin
       -- Si es tractar de llegir de fitxer, tancar el fitxer
-      if origen.defitxer then
+      if origen.to = f_seq then
          close(origen.fitxer);
+      elsif origen.to = f_directe then
+        close(origen.fitxer_d);
       end if;
    end close;
 
@@ -213,7 +216,7 @@ package body pparaula is
       l := origen.l;
       c := origen.c;
 
-      if not origen.defitxer then
+      if origen.to = teclat then
          -- llegir de teclat
          get(p, origen.lletra, origen.l, origen.c);
       else
@@ -259,6 +262,27 @@ package body pparaula is
       end if;
    end get;
 
+    procedure get(origen : in out OrigenParaules; p: out tparaula; idx: in Positive) is
+   begin
+      fitxer_paraules.Read(File => origen.fitxer_d,
+                           Item => p,
+                           From => fitxer_paraules.Positive_Count(idx));
+   end get;
+
+   function size(origen: in OrigenParaules) return Positive is
+   begin
+    if origen.to = f_directe then
+         return Positive(fitxer_paraules.Size(origen.fitxer_d));
+    end if;
+
+    raise bad_use;
+
+
+
+   end size;
+
+
+
    procedure first(it: out iterator) is
    begin
       it.idx:= rang_lletres'First;
@@ -272,7 +296,7 @@ package body pparaula is
       end if;
       end next;
 
-   function is_valid(p: in tparaula; it: in iterator) return boolean is
+   function is_valid(p: in tparaula; it: in out iterator) return boolean is
    begin
       return it.idx >= rang_lletres'First and it.idx <= p.llargaria;
    end is_valid;
@@ -281,7 +305,6 @@ package body pparaula is
    begin
       c := p.lletres(it.idx);
    end get;
-
 
 
 end pparaula;

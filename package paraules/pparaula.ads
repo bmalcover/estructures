@@ -1,51 +1,59 @@
 -- Autor: Pere Palmer
-with Ada.Text_IO, Ada.Characters.Latin_1, Ada.Characters.Handling;
+with Ada.Text_IO, Ada.Direct_IO, Ada.Characters.Latin_1, Ada.Characters.Handling;
 use Ada.Text_IO,  Ada.Characters.Latin_1, Ada.Characters.Handling;
 
 -- Package que defineix el tipus tparaula i les operacions
 -- que es poden realitzar amb ell.
 --
--- Aquest package tambï¿½ defineix el tipus OrigenParaula per poder
+-- Aquest package també defineix el tipus OrigenParaula per poder
 -- fer tractaments des de fitxer i teclat independentment.
-generic
-    MAXIM : integer;
-
 package pparaula is
+   ---------------------------------------------------------
+   -- Definicions públiques relacionades amb les paraules --
+   ---------------------------------------------------------
 
-   -- Rang de llargaries que pot tenir una paraula donada
+   -- Nombre màxim de lletres que poden formar una paraula
+   MAXIM : constant integer:= 30;
+   -- Rang de llargàries que pot tenir una paraula donada
    subtype tllargaria is  integer range 0..MAXIM;
    subtype rang_lletres is tllargaria range 1..tllargaria'LAST;
 
-   -- Definicio del tipus tparaula.
+   bad_use: exception;
+
+
+   type torigen is (teclat, f_seq, f_directe);
+
+   -- Definició del tipus tparaula.
    type tparaula is private;
 
    -- Procediment per poder llegir del teclat
-  -- procedure get(p : out tparaula; lletra : in out character;  l, c: in out integer);
+   --procedure get(p : out tparaula; lletra : in out character;  l, c: in out integer);
    -- Procediment per escriure a la pantalla
    procedure put(p : in tparaula);
    -- Procediment per escriure a un fitxer de text
    procedure put(f : in out File_Type; p : in tparaula);
-   -- Funciï¿½ per comparar dues paraules i determinar si sï¿½n iguals
+   -- Funció per comparar dues paraules i determinar si són iguals
    function "=" (a, b : in tparaula) return boolean;
-   -- Funciï¿½ per saber la llargï¿½ria d'una paraula. ï¿½s a dir, el nombre
-   -- de lletres que formen la paraula en qï¿½estiï¿½
+   -- Funció per saber la llargària d'una paraula. És a dir, el nombre
+   -- de lletres que formen la paraula en qüestió
    function llargaria(p : in tparaula) return tllargaria;
-   -- Funciï¿½ que indica si la paraula estï¿½ buida
+   -- Funció que indica si la paraula està buida
    function buida(p : in tparaula) return boolean;
-   -- Funciï¿½ que torna la lletra que es troba a una posiciï¿½ determinada
+   -- Funció que torna la lletra que es troba a una posició determinada
    -- d'una paraula.
    function caracter(p : in tparaula; posicio : in rang_lletres) return character;
 
    function toString(p: in tparaula) return  String;
 
    ---------------------------------------------------------------------
-   -- Definicions publiques relacionades amb l'origen de les paraules --
+   -- Definicions públiques relacionades amb l'origen de les paraules --
    ---------------------------------------------------------------------
 
-   -- Procediment que copia una paraula.
+   -- Procediment que copia una paraula. És un procediment útil per
+   -- utilitzar aquest package PParaules i genèrics.
    procedure copiar(desti : out tparaula; origen : in tparaula);
 
-   type OrigenParaules is limited private;
+   type OrigenParaules(to: torigen) is limited private;
 
    -- Procediment per tractar amb les paraules llegides del teclat
    procedure open(origen : out OrigenParaules);
@@ -55,6 +63,10 @@ package pparaula is
    procedure close(origen : in out OrigenParaules);
    -- Procediment per llegir una paraula des d'un origen de paraules
    procedure get(origen : in out OrigenParaules; p: out tparaula; l, c: out integer);
+   procedure get(origen : in out OrigenParaules; p: out tparaula; idx: in Positive);
+
+   --nomes usable amb direct_io
+   function size(origen: in OrigenParaules) return Positive;
 
    ---------------------------------------------------------------------
    -- Iterador-
@@ -64,8 +76,8 @@ package pparaula is
 
    procedure first(it: out iterator);
    procedure next (p: in tparaula; it: in out iterator);
-   function is_valid(p: in tparaula; it: in iterator) return boolean;
-   procedure get  (p: in tparaula; it: in iterator; c: out character);
+   function is_valid(p: in tparaula; it: in out iterator) return boolean;
+   procedure get(p: in tparaula; it: in iterator; c: out character);
 
 private
    --------------------------------------------------------------
@@ -75,11 +87,14 @@ private
    -- Declaracions per declara l'array de lletres que formaran la paraula
    type taula_lletres is array (rang_lletres) of character;
 
-   -- Declaraciï¿½ privada del tipus tparaula.
+   -- Declaració privada del tipus tparaula.
    type tparaula is record
       lletres : taula_lletres;
       llargaria : tllargaria;
    end record;
+
+    package fitxer_paraules is new ada.Direct_IO(Element_Type => tparaula);
+     use fitxer_paraules;
 
    type iterator is
       record
@@ -88,14 +103,20 @@ private
 
 
    ---------------------------------------------------------------------
-   -- Definicions pï¿½bliques relacionades amb l'origen de les paraules --
+   -- Definicions públiques relacionades amb l'origen de les paraules --
    ---------------------------------------------------------------------
-   type OrigenParaules is record
-      defitxer : boolean; -- si el camp ï¿½s true es llegeix de fitxer
-                          -- si ï¿½s false es llegeix del teclat
-      fitxer : file_type; -- Si s'ha de llegir del fitxer es fa ï¿½s del camp
-      lletra : character; -- darrer carï¿½cter llegit
+
+
+   type OrigenParaules(to: torigen) is record
+      lletra : character; -- darrer caràcter llegit
       l, c   : integer;   -- linia i columna del darrer caracter llegit
+      case to is
+         when f_seq => fitxer : Ada.Text_IO.file_type;
+         when f_directe => fitxer_d : fitxer_paraules.File_Type;
+         when teclat => null;
+      end case;
+
+
    end record;
 
 end pparaula;
