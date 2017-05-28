@@ -4,14 +4,14 @@
 
 package body pparaula is
 
-   catala : constant array (1..12) of character := ('.',',',';',' ','[',']','!','?','-','(',')','&');
+   separadors : constant array (1..12) of character := ('.',',',';',' ','[',']','!','?','-','(',')','&');
 
    function Is_Separador(c: in character) return boolean is
 
    begin
 
-      for i in catala'Range loop
-         if catala(i) = c then return true; end if;
+      for i in separadors'Range loop
+         if separadors(i) = c then return true; end if;
       end loop;
 
       return false;
@@ -33,37 +33,21 @@ package body pparaula is
    procedure get(p : out tparaula; lletra : in out character; l, c: in out integer) is
       i : tllargaria := tllargaria'FIRST;
    begin
+
       while lletra = ' ' loop
             -- Nomes s'ha de llegir si hi ha qualque cosa
-            if End_Of_File then
-               lletra := '.';
-
-            else
                get(lletra);
                c := c + 1;
-            end if;
       end loop;
-        -- llegir les lletres de la paraula
-         while (not Is_Special(lletra)) and i < tllargaria'LAST loop
-            i := i+1;
-            p.lletres(i) := lletra;
-            -- Situar-se sobre el següent element implica determinar
-            -- si hi ha següent element o no. Si no n'hi ha aleshores
-            -- origen.lletra ha de valer '.'
-            if End_Of_File then
-               lletra := '.';
-            elsif End_of_Line then
-               lletra := ' ';
-               l := l + 1;
-               c := 0;
-            else
+      -- llegir les lletres de la paraula
+      while (not Is_Separador(lletra)) and i < tllargaria'LAST loop
+         i := i+1;
+         p.lletres(i) := lletra;
 
-               get(lletra);
-               c := c +1;
-            end if;
-         end loop;
+            get(lletra);
+            c := c +1;
+      end loop;
 
-         p.llargaria := i;
       p.llargaria := i;
    end get;
 
@@ -103,7 +87,7 @@ package body pparaula is
          resultat := false;
       else
          i := rang_lletres'FIRST;
-         while i < a.llargaria and a.lletres(i) = b.lletres(i) loop
+         while i < a.llargaria and a.lletres(i) = b.lletres(i) and i < MAXIM loop
             i := i + 1;
          end loop;
          resultat := a.lletres(i) = b.lletres(i);
@@ -163,7 +147,7 @@ package body pparaula is
       origen.lletra := ' ';
       origen.l := 0;
       origen.c := 0;
-      botar_blancs(origen.lletra);
+      --botar_blancs(origen.lletra);
    end open;
 
    -- Procediment per tractar amb les paraules llegides del fitxer nom
@@ -223,7 +207,7 @@ package body pparaula is
          -- llegir de fitxer
          -- botar_blancs
          while Is_Separador(origen.lletra) and (not eof) loop
-            -- Només s'ha de llegir si hi ha qualque cosa al fitxer
+            -- Nomes s'ha de llegir si hi ha qualque cosa al fitxer
             if End_Of_File(origen.fitxer) then
                origen.lletra := '.';
                eof := True;
