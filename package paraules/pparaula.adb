@@ -34,20 +34,24 @@ package body pparaula is
       i : tllargaria := tllargaria'FIRST;
    begin
 
-      while lletra = ' ' loop
-            -- Nomes s'ha de llegir si hi ha qualque cosa
-               get(lletra);
-               c := c + 1;
+      while Is_Separador(lletra) loop
+         -- Nomes s'ha de llegir si hi ha qualque cosa
+         get(lletra);
+         c := c + 1;
       end loop;
       -- llegir les lletres de la paraula
-      while (not Is_Separador(lletra)) and i < tllargaria'LAST loop
+      while not Is_Separador(lletra) and i < tllargaria'LAST loop
          i := i+1;
          p.lletres(i) := lletra;
+         if End_Of_Line then
+            lletra := ' ';
+         else
 
             get(lletra);
             c := c +1;
-      end loop;
+         end if;
 
+      end loop;
       p.llargaria := i;
    end get;
 
