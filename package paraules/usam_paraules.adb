@@ -3,7 +3,7 @@ with ada.Text_IO; use Ada.Text_IO;
 with pparaula;
 use pparaula;
 
-procedure Main is
+procedure usam_paraules is
    
  
    origen : OrigenParaules(teclat);
@@ -32,5 +32,5 @@ begin
 
    put(Size(origen_d)'img);
 
-end Main;
+end usam_paraules;
 
