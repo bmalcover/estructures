@@ -12,32 +12,25 @@ procedure Main is
    linia, columna : integer;
  
 begin
-   put("hi!");
+  
    open(origen => origen_d,
         nom    => "mascotes");
    open(origen);
    
    get(origen_d, p, 1);
    put(p);
+   get(origen_d, p, 2);
+   put(p);
+   put_line("Llegim paraules del teclat mentre no escrivim: exit");
    get(origen, p,linia, columna);
-   put(p);
-   get(origen_d, p, 3);
-   put(p);
    
+   while toString(p) /= "exit" loop
+      put(p);
+      get(origen, p, linia, columna);
+   end loop;
+  
+
    put(Size(origen_d)'img);
 
 end Main;
-
-
-
---   while not buida(p) loop
---  
---        fitxer_paraules.Write(File => f,
---                              Item => p);
---  
---  
---        get(origen, p, linia, columna);
---     end loop;
-
-
 
