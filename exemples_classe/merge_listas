@@ -1,0 +1,50 @@
+PROCEDURE MERGE(Li: in Lista; Li2: in Lista; Li3: out Lista) is
+
+    Q: pnodo;
+    L: pnodo  RENAMES Li.primero;
+    L2: pnodo RENAMES Li2.primero;
+    L3: pnodo RENAMES Li3.primero;
+    
+BEGIN
+    L3 := NULL;
+    Q  := L3;
+    
+    WHILE  (L /= NULL AND L2 /= NULL) LOOP
+        IF(L.x < L2.x) THEN
+            IF L3 = NULL THEN
+                L3 := L; Q := L3;
+            ELSE
+                Q.sig := L; Q := L;
+            END IF;
+            
+            L := L.sig;
+        ELSE
+            IF L3 = NULL THEN 
+                L3 := L2; Q:= L3;
+            ELSE
+                Q.sig := L2; Q := L2;
+            END IF;
+            
+            L2 := L2.sig;
+       END IF;
+   END LOOP;
+   
+   IF  L = NULL and L2 = NULL THEN L3 := NULL; -- dos listas vacias
+   ELSIF L = NULL THEN 
+       IF L3 = NULL THEN L3 := L2;
+       ELSE
+           Q.sig := L2;
+       END IF;
+   ELSIF L2 = NULL THEN 
+       IF L3 = NULL THEN L3 := L;
+       ELSE
+           Q.sig := L;
+       END IF;
+END MERGE;
+   
+       
+       
+   
+   
+        
+       
