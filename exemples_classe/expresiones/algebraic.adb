@@ -221,6 +221,57 @@ package body algebraic is
          when others => null;
       end case;
    end put_un_op;
+   
+   
+   function left_parent_req(e: in expression) return Boolean is
+      esb, esb1, esb2: expression;
+       bop: bin_op;
+   begin
+      g_bin(e, bop, esb1, esb2);
+      if bop = prod  and then e_type(esb1) = e_bin then
+         g_bin(esb1, bop, esb, esb2);
+         if bop = add then
+            return true;
+         end if;
+      end if;
+
+      if bop = sub  and then e_type(esb1) = e_bin then
+         g_bin(esb1, bop, esb, esb2);
+         if bop = add then
+            return true;
+         end if;
+      end if;
+      return false;
+   end left_parent_req;
+
+   function right_parent_req(e: in expression) return Boolean is
+      esb, esb1, esb2: expression;
+       bop: bin_op;
+   begin
+      g_bin(e, bop, esb1, esb2);
+      if bop = prod  and then e_type(esb2) = e_bin then
+         g_bin(esb2, bop, esb, esb2);
+         if bop = add then
+            return true;
+            end if;
+      end if;
+      if bop = sub  and then e_type(esb2) = e_bin then
+         g_bin(esb2, bop, esb, esb2);
+         if bop = add then
+            return true;
+         end if;
+      end if;
+      return false;
+   end right_parent_req;
+
+
+   function right_single_req(uop: in un_op) return Boolean is
+   begin
+      case uop is
+         when neg | none => return false;
+         when others => return true;
+      end case;
+   end right_single_req;
 
 
    procedure write(e: in expression)is
